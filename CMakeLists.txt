@@ -23,6 +23,12 @@ project(${DDSP_PROJECT_NAME}
     DESCRIPTION ${DDSP_PROJECT_DESC}
 )
 
+set(CMAKE_SYSTEM_NAME iOS)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_OSX_ARCHITECTURES "arm64")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "14.1")
+set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "YES")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # -------------------------------- JUCE ------------------------------- #
@@ -83,8 +89,12 @@ juce_generate_juce_header(${DDSP_EFFECT_TARGET})
 regroup_juce_target_sources(${DDSP_EFFECT_TARGET})
 
 if(APPLE)
-    set_target_properties(${DDSP_EFFECT_TARGET}_AU PROPERTIES XCODE_GENERATE_SCHEME ON)
-    set_target_properties(${DDSP_EFFECT_TARGET}_VST3 PROPERTIES XCODE_GENERATE_SCHEME ON)
+    if(TARGET ${DDSP_EFFECT_TARGET}_AU)
+        set_target_properties(${DDSP_EFFECT_TARGET}_AU PROPERTIES XCODE_GENERATE_SCHEME ON)
+    endif()
+    if(TARGET ${DDSP_EFFECT_TARGET}_VST3)
+        set_target_properties(${DDSP_EFFECT_TARGET}_VST3 PROPERTIES XCODE_GENERATE_SCHEME ON)
+    endif()
     set_target_properties(${DDSP_EFFECT_TARGET}_Standalone PROPERTIES XCODE_GENERATE_SCHEME ON)
 endif()
 
@@ -120,8 +130,12 @@ juce_generate_juce_header(${DDSP_SYNTH_TARGET})
 regroup_juce_target_sources(${DDSP_SYNTH_TARGET})
 
 if(APPLE)
-    set_target_properties(${DDSP_SYNTH_TARGET}_AU PROPERTIES XCODE_GENERATE_SCHEME ON)
-    set_target_properties(${DDSP_SYNTH_TARGET}_VST3 PROPERTIES XCODE_GENERATE_SCHEME ON)
+    if(TARGET ${DDSP_SYNTH_TARGET}_AU)
+        set_target_properties(${DDSP_SYNTH_TARGET}_AU PROPERTIES XCODE_GENERATE_SCHEME ON)
+    endif()
+    if(TARGET ${DDSP_SYNTH_TARGET}_VST3)
+        set_target_properties(${DDSP_SYNTH_TARGET}_VST3 PROPERTIES XCODE_GENERATE_SCHEME ON)
+    endif()
     set_target_properties(${DDSP_SYNTH_TARGET}_Standalone PROPERTIES XCODE_GENERATE_SCHEME ON)
 endif()
 
@@ -160,5 +174,31 @@ set_target_properties(${DDSP_UNIT_TEST_TARGET} PROPERTIES XCODE_GENERATE_SCHEME 
 
 include(GoogleTest)
 gtest_discover_tests(${DDSP_UNIT_TEST_TARGET})
+
+# ----------------------------- DDSP iOS App ----------------------------- #
+
+set(DDSP_IOS_APP_TARGET DDSPiOSApp)
+
+juce_add_gui_app(${DDSP_IOS_APP_TARGET}
+    PRODUCT_NAME "DDSP iOS App"
+    COMPANY_NAME ${DDSP_COMPANY_NAME}
+)
+
+target_include_directories(${DDSP_IOS_APP_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_sources(${DDSP_IOS_APP_TARGET} PRIVATE ${DDSP_SOURCES})
+target_compile_features(${DDSP_IOS_APP_TARGET} PUBLIC ${DDSP_CXX_STD})
+target_compile_definitions(${DDSP_IOS_APP_TARGET} PUBLIC ${DDSP_JUCE_COMPILE_DEFS})
+target_link_libraries(${DDSP_IOS_APP_TARGET}
+    PRIVATE
+    ${DDSP_PRIVATE_LIBS}
+    PUBLIC
+    ${DDSP_PUBLIC_LIBS}
+)
+juce_generate_juce_header(${DDSP_IOS_APP_TARGET})
+regroup_juce_target_sources(${DDSP_IOS_APP_TARGET})
+
+if(APPLE)
+    set_target_properties(${DDSP_IOS_APP_TARGET} PROPERTIES XCODE_GENERATE_SCHEME ON)
+endif()
 
 # --------------------------------------------------------------------- #
